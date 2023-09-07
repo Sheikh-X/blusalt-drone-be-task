@@ -1,0 +1,22 @@
+{
+  "name": "blusalt-test",
+  "version": "1.0.0",
+  "description": "blusalt backend task",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sheikhx",
+    "blusalt",
+    "simple",
+    "drone",
+    "management",
+    "api"
+  ],
+  "author": "Afeez Bakare",
+  "license": "ISC",
+  "dependencies": {
+    "save": "^2.9.0"
+  }
+}
