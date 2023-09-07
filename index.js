@@ -4,6 +4,8 @@ const sqlite3 = require("sqlite3").verbose(); //verbose flag is added to capture
 const app = express();
 const port = 3005;
 const db = new sqlite3.Database(":memory:"); //memory option picked as I'm not persisiting data.
+const multer = require("multer");
+const upload = multer();
 
 //queries to create  the medication and drone tables
 db.serialize(() => {
@@ -71,7 +73,7 @@ app.post("/drones/register", (req, res) => {
     }
   );
 });
-app.get("/drones/all", (req, res) => {
+app.get("/medication/all", (req, res) => {
   db.all(
     `SELECT *
     FROM medication`,
@@ -121,9 +123,10 @@ app.get("/drones/:serial_number/battery-level", (req, res) => {
   );
 });
 
-app.post("/drones/:serial_number/load", (req, res) => {
+app.post("/drones/:serial_number/load", upload.single("image"), (req, res) => {
   const serial_number = req.params.serial_number;
-  const { name, weight, code, image } = req.body;
+  const { name, weight, code } = req.body;
+  const image = req.file;
 
   // Check the state of the drone
   db.get(
