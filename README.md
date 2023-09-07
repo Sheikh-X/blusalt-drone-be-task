@@ -25,18 +25,29 @@ Before running the application, make sure you have the following installed on yo
 
 1. Clone this repository to your local machine:
 
-   git clone https://github.com/Sheikh-X/blusalt-drone-be-task.git
+```sh
+  git clone https://github.com/Sheikh-X/blusalt-drone-be-task.git
+```
 
 Navigate to the project directory:
-cd <project-directory> 2. Install the project dependencies:
-npm install
+
+```sh
+        cd blusalt-drone-be-task 2. Install the project dependencies:
+        npm install
+```
+
 ...
 
 ### Running the Application
 
 1.  Start the application:
+
+```sh
     npm start
+```
+
     This will start the application on port 3005 by default. You can change the port in the index.js file if needed.
+
 2.  Open your web browser or API client (e.g., Postman) and access the following URLs:
 
         API Documentation (Swagger UI): http://localhost:3005/api-docs
