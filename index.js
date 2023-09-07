@@ -74,7 +74,7 @@ app.post("/drones/register", (req, res) => {
 app.get("/drones/all", (req, res) => {
   db.all(
     `SELECT *
-    FROM Drones`,
+    FROM medication`,
     (err, rows) => {
       if (err) {
         console.error(err);
@@ -159,7 +159,7 @@ app.post("/drones/:serial_number/load", (req, res) => {
           }
 
           const weightLimit = row.weightLimit;
-
+          console.log(weight, weightLimit);
           if (weight > weightLimit) {
             return res.status(400).json({
               error: "Medication weight exceeds the drone's weight limit",
@@ -199,6 +199,28 @@ app.post("/drones/:serial_number/load", (req, res) => {
           );
         }
       );
+    }
+  );
+});
+
+app.get("/drones/:serial_number/loaded-medications", (req, res) => {
+  const serial_number = req.params.serial_number;
+
+  db.all(
+    `SELECT medication.*
+     FROM medication
+     INNER JOIN drone_medications ON medication.id = drone_medications.medication_id
+     WHERE drone_medications.drone_serial_number = ?`,
+    [serial_number],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch loaded medications" });
+      }
+
+      res.json(rows);
     }
   );
 });
