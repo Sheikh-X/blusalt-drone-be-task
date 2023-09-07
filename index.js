@@ -9,8 +9,8 @@ const db = new sqlite3.Database(":memory:"); //memory option picked as I'm not p
 db.serialize(() => {
   //using serialize to ensure the queries run sequentially as defined below
   db.run(`
-    CREATE TABLE Drones (
-      serialNumber TEXT PRIMARY KEY CHECK(length(serialNumber) <= 100),
+    CREATE TABLE IF NOT EXISTS Drones (
+      serial_number TEXT PRIMARY KEY CHECK(length(serial_number) <= 100),
       model TEXT CHECK(model IN ('Lightweight', 'Middleweight', 'Cruiserweight', 'Heavyweight')),
       weightLimit REAL CHECK(weightLimit <= 500),
       batteryCapacity REAL CHECK(batteryCapacity >= 0 AND batteryCapacity <= 100),
@@ -19,11 +19,21 @@ db.serialize(() => {
   `);
 
   db.run(`
-    CREATE TABLE Medication (
-      name TEXT PRIMARY KEY CHECK(name GLOB '[A-Za-z0-9_-]*'),
+    CREATE TABLE  IF NOT EXISTS Medication (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT CHECK(name GLOB '[A-Za-z0-9_-]*'),
       weight REAL,
       code TEXT CHECK(code GLOB '[A-Z0-9_]*'),
       image BLOB 
+    )
+  `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Drone_medications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      drone_serial_number INTEGER NOT NULL,
+      medication_id INTEGER NOT NULL,
+      FOREIGN KEY (drone_serial_number) REFERENCES Drones(serial_number),
+      FOREIGN KEY (medication_id) REFERENCES Medication(id)
     )
   `);
 });
@@ -31,7 +41,7 @@ db.serialize(() => {
 //instead of storing it as blob like I have doen above.
 
 app.use(express.json());
-app.post("/drones", (req, res) => {
+app.post("/drones/register", (req, res) => {
   const { serial_number, model, weight_limit, battery_capacity, state } =
     req.body;
   if (
@@ -45,9 +55,11 @@ app.post("/drones", (req, res) => {
   ) {
     return res.status(400).json({ error: "All parameters are required" });
   }
-
+  if (state === "LOADING" && battery_capacity < 25) {
+    return res.status(400).json({ error: "Drone battery level is below 25%" });
+  }
   db.run(
-    `INSERT INTO Drones (serialNumber, model, weightLimit, batteryCapacity, state)
+    `INSERT INTO Drones (serial_number, model, weightLimit, batteryCapacity, state)
     VALUES (?, ?, ?, ?, ?)`,
     [serial_number, model, weight_limit, battery_capacity, state],
     (err) => {
@@ -95,7 +107,7 @@ app.get("/drones/:serial_number/battery-level", (req, res) => {
   db.get(
     `SELECT batteryCapacity
     FROM drones
-    WHERE serialNumber = ?`,
+    WHERE serial_number = ?`,
     [serial_number],
     (err, row) => {
       if (err) {
@@ -105,6 +117,88 @@ app.get("/drones/:serial_number/battery-level", (req, res) => {
           .json({ error: "Failed to fetch drone battery level" });
       }
       res.json(row);
+    }
+  );
+});
+
+app.post("/drones/:serial_number/load", (req, res) => {
+  const serial_number = req.params.serial_number;
+  const { name, weight, code, image } = req.body;
+
+  // Check the state of the drone
+  db.get(
+    `SELECT state FROM drones WHERE serial_number = ?`,
+    [serial_number],
+    (err, row) => {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch the drone's state" });
+      }
+
+      const state = row.state;
+
+      // Check if the drone is in the "IDLE" state
+      if (state !== "IDLE") {
+        return res.status(400).json({
+          error: "Drone is not in the 'IDLE' state and cannot be loaded",
+        });
+      }
+
+      // Check  weight limit of the drone
+      db.get(
+        `SELECT weightLimit FROM drones WHERE serial_number = ?`,
+        [serial_number],
+        (err, row) => {
+          if (err) {
+            console.error(err);
+            return res
+              .status(500)
+              .json({ error: "Failed to fetch the drone's weight limit" });
+          }
+
+          const weightLimit = row.weightLimit;
+
+          if (weight > weightLimit) {
+            return res.status(400).json({
+              error: "Medication weight exceeds the drone's weight limit",
+            });
+          }
+
+          // If  weight is within the limit, pload medication
+          db.run(
+            `INSERT INTO medication (name, weight, code, image)
+            VALUES (?, ?, ?, ?)`,
+            [name, weight, code, image],
+            function (err) {
+              if (err) {
+                console.error(err);
+                return res
+                  .status(500)
+                  .json({ error: "Failed to load medication" });
+              }
+
+              const medicationId = this.lastID;
+
+              db.run(
+                `INSERT INTO drone_medications (drone_serial_number, medication_id)
+                VALUES (?, ?)`,
+                [serial_number, medicationId],
+                (err) => {
+                  if (err) {
+                    console.error(err);
+                    return res.status(500).json({
+                      error: "Failed to load medication to the drone",
+                    });
+                  }
+                  res.json({ message: "Medication loaded successfully" });
+                }
+              );
+            }
+          );
+        }
+      );
     }
   );
 });
