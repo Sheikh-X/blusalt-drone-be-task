@@ -73,6 +73,23 @@ app.get("/drones/all", (req, res) => {
   );
 });
 
+app.get("/drones/available", (req, res) => {
+  db.all(
+    `SELECT *
+    FROM drones
+    WHERE state = 'IDLE' AND batteryCapacity > 0.25`,
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch available drones" });
+      }
+      res.json(rows);
+    }
+  );
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
