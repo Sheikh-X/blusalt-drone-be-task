@@ -1,26 +1,70 @@
-# Introduction
+# BluSalt Drones Task Node.js Application
 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project.
+This is a Node.js application that simulates the management of drones and medication. It provides RESTful APIs for registering drones, managing medications, and checking drone status.
 
-# Getting Started
+## Table of Contents
 
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Seeding Data](#seeding-data)
+- [Notes](#notes)
 
-1. Installation process
-2. Software dependencies
-3. Latest releases
-4. API references
+## Prerequisites
 
-# Build and Test
+Before running the application, make sure you have the following installed on your system:
 
-TODO: Describe and show how to build your code and run the tests.
+- Node.js and npm (Node Package Manager): [Download Here](https://nodejs.org/)
+- SQLite3: [Download Here](https://www.sqlite.org/download.html)
 
-# Contribute
+## Getting Started
 
-TODO: Explain how other users and developers can contribute to make your code better.
+### Installation
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
+1. Clone this repository to your local machine:
 
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+   git clone https://github.com/Sheikh-X/blusalt-drone-be-task.git
+
+Navigate to the project directory:
+cd <project-directory> 2. Install the project dependencies:
+npm install
+...
+
+### Running the Application
+
+1.  Start the application:
+    npm start
+    This will start the application on port 3005 by default. You can change the port in the index.js file if needed.
+2.  Open your web browser or API client (e.g., Postman) and access the following URLs:
+
+        API Documentation (Swagger UI): http://localhost:3005/api-docs
+
+        Use the provided APIs to manage drones and medications. Refer to the API documentation for details on available endpoints.
+
+    ...
+
+### API Documentation
+
+API documentation is available using Swagger UI. You can access the documentation by visiting http://localhost:3005/api-docs after starting the application.
+
+It is also available on the web via
+https://documenter.getpostman.com/view/14245209/2s9YBz3axx
+
+...
+
+### Seeding Data
+
+The application seeds the SQLite database with initial data for drones and medications. This data includes 10 records each. You can find the seeding queries in the index.js file
+
+...
+
+### Notes
+
+1.  For a production application,I would have used an external storage solutions (e.g., S3 bucket or Azure Blob Storage) for storing images instead of storing them as BLOBs in the database.
+2.  SQLite is not recommended for a production app, I recommend Postgres database instead.
+3.  Due to time contraints I haven't written any tests.
+4.  Also due to time constraints, I haven't indluded input data validation and handled cases when the db completed a query but there is no data to return.
+
+All the above and other isssues such as proper separation of routes, logic, database config and connections are suggested improvements that can be added.
