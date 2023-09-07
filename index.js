@@ -89,6 +89,25 @@ app.get("/drones/available", (req, res) => {
     }
   );
 });
+app.get("/drones/:serial_number/battery-level", (req, res) => {
+  const serial_number = req.params.serial_number;
+
+  db.get(
+    `SELECT batteryCapacity
+    FROM drones
+    WHERE serialNumber = ?`,
+    [serial_number],
+    (err, row) => {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch drone battery level" });
+      }
+      res.json(row);
+    }
+  );
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
